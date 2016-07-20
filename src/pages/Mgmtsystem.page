@@ -1,0 +1,65 @@
+<apex:page showHeader="true" sidebar="true" standardStylesheets="true" controller="MgmtSystemController">
+<!-- 
+1 - Managers should be able to add new titles
+2 - Managers should be able to easily manage stocked items for a single title
+3 - Managers should be able to select which titles to “feature” on the customer facing application
+4 - Employees should be able to mark a rented stocked item as “Available” when it is returned
+ -->	
+	<div id="responseErrors"></div>
+    <apex:pageBlock >
+	<input type="button" data-bind="click: addTitle" value="Add New Title"/>
+    	<table id="titlesTable">
+	    	<thead>
+	    		<tr><td>Title</td><td>Genre</td><td>Featured</td><td>Checked</td></tr>
+			</thead>
+			<tbody data-bind="foreach: allTitles">
+			    <tr>
+			        <td data-bind="text: name"></td>
+			        <td><input data-bind="value: genre"/></td>
+			        <td><input type="checkbox" data-bind="checked: featured"/></td>
+			        <td data-bind="text: checked"></td>
+			    </tr>    
+			</tbody>
+		</table>
+    </apex:pageBlock>
+
+	<apex:includeScript value="https://ajax.aspnetcdn.com/ajax/knockout/knockout-3.3.0.js"/>
+	<apex:includeScript value="//code.jquery.com/jquery-1.12.3.js"/>
+	<apex:includeScript value="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"/>
+	<apex:stylesheet value="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css"/>	
+	<!-- <apex:includeScript value="{!$Resource.movieRental}"/> -->
+	<script>
+
+		$(document).ready(function() {
+		    $('#titlesTable').DataTable();
+		} );
+
+		// Class to represent a row in the title table
+		function Title(name, genre, featured) {
+		    var self = this;
+		    self.name = name;
+		    self.genre = genre;
+		    self.featured = ko.observable(featured);
+		    self.checked = ko.computed(function(){
+		    	return self.featured();
+		    });
+		}
+
+		// Overall viewmodel for this screen, along with initial state
+		function MoviesModel() {
+		    var self = this;
+
+		    // data from server
+		    self.allTitles = ko.observableArray();
+			var json = {!titlesJSON};
+        	for(let title of json){
+        		self.allTitles.push(new Title(title.Name, title.Genre__c, title.Featured__c));
+        	}
+
+			self.addTitle = function(){
+				this.allTitles.push(new Title("","", false));
+			};
+		}
+		ko.applyBindings(new MoviesModel());
+	</script>
+</apex:page>
